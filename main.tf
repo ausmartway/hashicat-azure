@@ -17,9 +17,16 @@
 #     }
 #   }
 # }
+resource "random_string" "surffix" {
+  length = 4
+  lower  = true
+  numeric = false
+  special = false
+  upper = false
+}
 
 resource "azurerm_resource_group" "myresourcegroup" {
-  name     = "${var.prefix}-workshop"
+  name     = "${var.prefix}-${random_string.surffix.result}-workshop"
   location = var.location
 
   tags = {
@@ -28,21 +35,21 @@ resource "azurerm_resource_group" "myresourcegroup" {
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  name                = "${var.prefix}-vnet"
+  name                = "${var.prefix}-${random_string.surffix.result}-vnet"
   location            = azurerm_resource_group.myresourcegroup.location
   address_space       = [var.address_space]
   resource_group_name = azurerm_resource_group.myresourcegroup.name
 }
 
 resource "azurerm_subnet" "subnet" {
-  name                 = "${var.prefix}-subnet"
+  name                 = "${var.prefix}-${random_string.surffix.result}-subnet"
   virtual_network_name = azurerm_virtual_network.vnet.name
   resource_group_name  = azurerm_resource_group.myresourcegroup.name
   address_prefixes     = [var.subnet_prefix]
 }
 
 resource "azurerm_network_security_group" "catapp-sg" {
-  name                = "${var.prefix}-sg"
+  name                = "${var.prefix}-${random_string.surffix.result}-sg"
   location            = var.location
   resource_group_name = azurerm_resource_group.myresourcegroup.name
 
@@ -84,7 +91,7 @@ resource "azurerm_network_security_group" "catapp-sg" {
 }
 
 resource "azurerm_network_interface" "catapp-nic" {
-  name                = "${var.prefix}-catapp-nic"
+  name                = "${var.prefix}-${random_string.surffix.result}-catapp-nic"
   location            = azurerm_resource_group.myresourcegroup.location
   resource_group_name = azurerm_resource_group.myresourcegroup.name
 
@@ -102,15 +109,15 @@ resource "azurerm_network_interface_security_group_association" "catapp-nic-sg-a
 }
 
 resource "azurerm_public_ip" "catapp-pip" {
-  name                = "${var.prefix}-ip"
+  name                = "${var.prefix}-${random_string.surffix.result}-ip"
   location            = azurerm_resource_group.myresourcegroup.location
   resource_group_name = azurerm_resource_group.myresourcegroup.name
   allocation_method   = "Dynamic"
-  domain_name_label   = "${var.prefix}-meow"
+  domain_name_label   = "${var.prefix}-${random_string.surffix.result}-meow"
 }
 
 resource "azurerm_linux_virtual_machine" "catapp" {
-  name                            = "${var.prefix}-meow"
+  name                            = "${var.prefix}-${random_string.surffix.result}-meow"
   location                        = azurerm_resource_group.myresourcegroup.location
   resource_group_name             = azurerm_resource_group.myresourcegroup.name
   size                            = var.vm_size
@@ -187,7 +194,7 @@ resource "null_resource" "configure-cat-app" {
       "sudo systemctl start apache2",
       "sudo chown -R ${var.admin_username}:${var.admin_username} /var/www/html",
       "chmod +x *.sh",
-      "PLACEHOLDER=${var.placeholder} WIDTH=${var.width} HEIGHT=${var.height} PREFIX=${var.prefix} ./deploy_app.sh",
+      "PLACEHOLDER=${var.placeholder} WIDTH=${var.width} HEIGHT=${var.height} PREFIX=${var.prefix}-${random_string.surffix.result} ./deploy_app.sh",
       "sudo apt -y install cowsay",
       "cowsay Mooooooooooo!",
     ]
